@@ -8,7 +8,7 @@ __email__ = "nikolas@koesling.info"
 
 import subprocess
 import unittest
-from src.exec_cmd import execute
+from nkutils.exec_cmd import execute
 
 
 class TestExecCmd(unittest.TestCase):
