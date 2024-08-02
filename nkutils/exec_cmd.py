@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+:brief: wrapper to simplify subprocess.Popen
+"""
+
 __author__ = "Nikolas Koesling"
 __copyright__ = "Copyright 2024, Nikolas Koesling"
 __license__ = "LGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __email__ = "nikolas@koesling.info"
 
 import subprocess
@@ -11,7 +15,12 @@ import shlex
 
 
 class CommandResult:
-    def __init__(self, cmd: str, args: list[str], stdout: bytes, stderr: bytes, exit_code: int) -> None:
+    """
+    :brief: class that conntains the result of exec_cmd
+    """
+
+    def __init__(self, cmd: str, args: list[str], stdout: bytes, stderr: bytes,
+                 exit_code: int) -> None:
         self.__cmd = cmd
         self.__args = args
         self.__stdout = stdout
@@ -83,16 +92,17 @@ def execute(cmd: str,
     :param timeout: optional timeout in seconds
     :return: result as CommandResult object
     """
-    cmd_list = [cmd] + args if args else [cmd]
-    process = subprocess.Popen(cmd_list, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    try:
-        stdout, stderr = process.communicate(input=cmd_input, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.communicate(input=cmd_input, timeout=timeout)
-        raise
-    exit_code = process.returncode
+    with subprocess.Popen([cmd] + args if args else [cmd],
+                          stdin=subprocess.PIPE,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE) as process:
+        try:
+            stdout, stderr = process.communicate(input=cmd_input, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.communicate(input=cmd_input, timeout=timeout)
+            raise
+        exit_code = process.returncode
 
     return CommandResult(cmd, args, stdout, stderr, exit_code)
 
@@ -102,4 +112,4 @@ if __name__ == '__main__':
     import os
 
     print("Not a standalone module", file=sys.stderr)
-    exit(os.EX_SOFTWARE)
+    sys.exit(os.EX_SOFTWARE)
